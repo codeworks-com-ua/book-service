@@ -35,11 +35,6 @@ public class UserService implements UserDetailsService {
         return userRepository.findByUsername(username);
     }
 
-    public User persistUser(User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userRepository.save(user);
-    }
-
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return findByUsername(username)
@@ -53,13 +48,24 @@ public class UserService implements UserDetailsService {
     }
 
     public String authenticate(String username, String password) {
-        UserDetails userDetails = loadUserByUsername(username);
+        log.info("Authenticating user with username: {}", username);
+        UserDetails userDetails;
+
+        try {
+            userDetails = loadUserByUsername(username);
+        } catch (UsernameNotFoundException e) {
+            log.warn("Authentication failed for non-existing username: {}", username);
+            throw new AuthenticationException("Invalid credentials");
+        }
+
         boolean passwordMatches = passwordEncoder.matches(password, userDetails.getPassword());
 
         if (passwordMatches) {
+            log.info("Authentication successful for username: {}", username);
             return generateToken(userDetails, username);
         }
 
+        log.warn("Authentication failed for username: {} - invalid credentials", username);
         throw new AuthenticationException("Invalid credentials");
     }
 
