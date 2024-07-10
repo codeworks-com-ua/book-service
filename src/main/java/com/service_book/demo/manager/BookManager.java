@@ -2,16 +2,13 @@ package com.service_book.demo.manager;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
 import com.service_book.demo.entity.Book;
-import com.service_book.demo.entity.User;
 import com.service_book.demo.mapper.BookMapper;
 import com.service_book.demo.model.BookDTO;
 import com.service_book.demo.service.BookService;
-import com.service_book.demo.service.UserService;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -27,13 +24,13 @@ public class BookManager {
     private static final String BOOK_SUCCESSFULLY_BORROWED = "Book successfully borrowed";
     private static final String BOOK_SUCCESSFULLY_RETURNED = "Book successfully returned";
 
-    BookMapper bookMapper;
+    BookMapper bookMapper = BookMapper.getInstance();
     BookService bookService;
 
     public List<BookDTO> getAll() {
         return bookService.getAll().stream()
                 .map(bookMapper::toDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public Optional<BookDTO> getById(Integer bookId) {
@@ -70,7 +67,7 @@ public class BookManager {
 
     public boolean delete(Integer bookId) {
         return bookService.findById(bookId)
-                .filter(book -> !book.isBorrowed())
+                .filter(Book::isNotBorrowed)
                 .map(book -> {
                     bookService.deleteBook(bookId);
                     return Boolean.TRUE;

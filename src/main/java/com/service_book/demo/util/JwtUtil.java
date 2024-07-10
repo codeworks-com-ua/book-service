@@ -14,7 +14,8 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class JwtUtil {
 
-    private String SECRET_KEY = "secret";
+    private static final String SECRET_KEY = "SECRET_KEY";
+    public static final String ROLES = "roles";
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -31,7 +32,7 @@ public class JwtUtil {
 
     public String generateToken(String username, List<String> roles) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("roles", roles);
+        claims.put(ROLES, roles);
         return createToken(claims, username);
     }
 

@@ -1,9 +1,14 @@
 package com.service_book.demo.config;
 
+import static com.service_book.demo.util.JwtUtil.ROLES;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.jetbrains.annotations.NotNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -20,34 +25,40 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
-            throws ServletException, IOException {
-        final String authorizationHeader = request.getHeader("Authorization");
+    public static final String AUTHORIZATION = "Authorization";
+    public static final String BEARER = "Bearer ";
 
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, @NotNull HttpServletResponse response,
+            @NotNull FilterChain chain)
+            throws ServletException, IOException {
+
+        final String authorizationHeader = request.getHeader(AUTHORIZATION);
         String username = null;
         String jwt = null;
+        final boolean jwtExists = nonNull(authorizationHeader) && authorizationHeader.startsWith(BEARER);
 
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+        if (jwtExists) {
             jwt = authorizationHeader.substring(7);
             username = JwtUtil.extractUsername(jwt);
-            System.out.println("JWT Token: " + jwt);
-            System.out.println("Extracted Username: " + username);
         }
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            if (JwtUtil.validateToken(jwt, username)) {
-                List<String> roles = JwtUtil.extractAllClaims(jwt).get("roles", List.class);
-                System.out.println("Extracted Roles: " + roles);
+        final boolean requireAuth = nonNull(username) && isNull(SecurityContextHolder.getContext().getAuthentication());
+
+        if (requireAuth) {
+
+            final boolean isTokenValid = JwtUtil.validateToken(jwt, username);
+
+            if (isTokenValid) {
+                List<String> roles = JwtUtil.extractAllClaims(jwt).get(ROLES, List.class);
+
                 UsernamePasswordAuthenticationToken authenticationToken =
                         new UsernamePasswordAuthenticationToken(username, null,
                                 roles.stream()
                                         .map(SimpleGrantedAuthority::new)
-                                        .collect(Collectors.toList()));
-                System.out.println("Authentication Token: " + authenticationToken);
+                                        .toList());
+
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-            } else {
-                System.out.println("Invalid JWT Token");
             }
         }
         chain.doFilter(request, response);

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.service_book.demo.dao.BookRepository;
 import com.service_book.demo.entity.Book;
@@ -33,28 +34,9 @@ public class BookService {
         return bookRepository.save(book);
     }
 
-    public Book updateBook(Integer id, Book book) {
-
-        if (bookRepository.existsById(id)) {
-            book.setId(id);
-            return bookRepository.save(book);
-        }
-
-        return null;
-    }
-
+    @Transactional
     public void deleteBook(Integer id) {
         bookRepository.deleteById(id);
-    }
-
-
-    public Book returnBook(Integer id) {
-        Optional<Book> book = bookRepository.findById(id);
-        if (book.isPresent() && book.get().isBorrowed()) {
-            book.get().setBorrowed(false);
-            return bookRepository.save(book.get());
-        }
-        return null;
     }
 
     public void markBorrowedAndPersist(Book book) {

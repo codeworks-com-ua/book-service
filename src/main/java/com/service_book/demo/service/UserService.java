@@ -1,9 +1,9 @@
 package com.service_book.demo.service;
 
+import static java.lang.String.format;
+
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import com.service_book.demo.dao.UserRepository;
 import com.service_book.demo.entity.User;
+import com.service_book.demo.exception.AuthenticationException;
 import com.service_book.demo.util.JwtUtil;
 
 import lombok.AccessLevel;
@@ -47,19 +48,26 @@ public class UserService implements UserDetailsService {
                         .password(user.getPassword())
                         .roles(user.getRole())
                         .build())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        format("User not found with username: [%s]", username)));
     }
 
     public String authenticate(String username, String password) {
         UserDetails userDetails = loadUserByUsername(username);
-        //todo use password encoder here and store encoded pass word
-        if (userDetails.getPassword().equals(password)) {
-            List<String> roles = userDetails.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .toList();
-            return JwtUtil.generateToken(username, roles);
+        boolean passwordMatches = passwordEncoder.matches(password, userDetails.getPassword());
+
+        if (passwordMatches) {
+            return generateToken(userDetails, username);
         }
 
-        throw new RuntimeException("Invalid credentials");
+        throw new AuthenticationException("Invalid credentials");
+    }
+
+    private String generateToken(UserDetails userDetails, String username) {
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
+
+        return JwtUtil.generateToken(username, roles);
     }
 }

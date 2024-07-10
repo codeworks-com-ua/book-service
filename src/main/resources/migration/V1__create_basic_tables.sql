@@ -4,7 +4,7 @@ CREATE TABLE app_user
     id       SERIAL PRIMARY KEY,
     role     VARCHAR(15),
     username VARCHAR(50),
-    password VARCHAR(50)
+    password VARCHAR(150)
 );
 
 -- Create table for Book entity
@@ -20,8 +20,8 @@ CREATE TABLE book
 -- Populating user table with default values
 INSERT INTO app_user (role, username, password)
 VALUES
-    ('ADMIN', 'ADMIN', 'ADMIN'),
-    ('USER', 'USER', 'USER');
+    ('ADMIN', 'ADMIN', '$2a$10$wxXnVzP1i.yysW659Uyw.Om1KQjF0NIeg7twTtx/zf6E1hnS.roHC'),
+    ('USER', 'USER', '$2a$10$8CyE1YGPNiz0V8M/SYIZKOhA//3ptxWGHs.whbKp7vwArIx1WVyC2');
 
 -- Populating book table with default values
 INSERT INTO book (title, isbn, category, borrowed)
