@@ -1,0 +1,38 @@
+-- Create table for User entity
+CREATE TABLE app_user
+(
+    id       SERIAL PRIMARY KEY,
+    role     VARCHAR(15),
+    username VARCHAR(50),
+    password VARCHAR(50)
+);
+
+-- Create table for Book entity
+CREATE TABLE book
+(
+    id       SERIAL PRIMARY KEY,
+    title    VARCHAR(50),
+    isbn     VARCHAR(50),
+    category VARCHAR(50),
+    borrowed BOOLEAN
+);
+
+-- Populating user table with default values
+INSERT INTO app_user (role, username, password)
+VALUES
+    ('ADMIN', 'ADMIN', 'ADMIN'),
+    ('USER', 'USER', 'USER');
+
+-- Populating book table with default values
+INSERT INTO book (title, isbn, category)
+VALUES
+    ('To Kill a Mockingbird', '978-0-06-112008-4', 'Fiction'),
+    ('1984', '978-0-452-28423-4', 'Dystopian'),
+    ('The Great Gatsby', '978-0-7432-7356-5', 'Classic'),
+    ('The Catcher in the Rye', '978-0-316-76948-0', 'Classic'),
+    ('Moby-Dick', '978-0-14-243724-7', 'Adventure'),
+    ('Pride and Prejudice', '978-0-19-953556-9', 'Romance'),
+    ('The Hobbit', '978-0-618-00221-3', 'Fantasy'),
+    ('War and Peace', '978-0-19-923276-5', 'Historical'),
+    ('The Odyssey', '978-0-14-026886-7', 'Epic'),
+    ('Crime and Punishment', '978-0-14-044913-6', 'Psychological');
