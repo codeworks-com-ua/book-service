@@ -94,7 +94,7 @@ public class BookManager {
             return BOOK_IS_NOT_BORROWED;
         }
 
-        bookService.markBorrowedAndPersist(book);
+        bookService.markReturnedAndPersist(book);
         return BOOK_SUCCESSFULLY_RETURNED;
     }
 }

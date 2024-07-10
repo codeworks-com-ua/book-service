@@ -62,4 +62,9 @@ public class BookService {
         bookRepository.save(book);
     }
 
+    public void markReturnedAndPersist(Book book) {
+        book.setBorrowed(Boolean.FALSE);
+        bookRepository.save(book);
+    }
+
 }

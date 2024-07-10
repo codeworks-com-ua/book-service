@@ -11,6 +11,8 @@ public class DemoApplication {
 	}
 
 
-	//todo use mapper
+	//todo pass pom versions to properties
+	// add query to assign book to user
+	// try to delete redundant annotations on entity and dto
 
 }

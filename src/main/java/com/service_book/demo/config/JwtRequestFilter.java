@@ -31,17 +31,23 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);
             username = JwtUtil.extractUsername(jwt);
+            System.out.println("JWT Token: " + jwt);
+            System.out.println("Extracted Username: " + username);
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             if (JwtUtil.validateToken(jwt, username)) {
                 List<String> roles = JwtUtil.extractAllClaims(jwt).get("roles", List.class);
+                System.out.println("Extracted Roles: " + roles);
                 UsernamePasswordAuthenticationToken authenticationToken =
                         new UsernamePasswordAuthenticationToken(username, null,
                                 roles.stream()
                                         .map(SimpleGrantedAuthority::new)
                                         .collect(Collectors.toList()));
+                System.out.println("Authentication Token: " + authenticationToken);
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            } else {
+                System.out.println("Invalid JWT Token");
             }
         }
         chain.doFilter(request, response);

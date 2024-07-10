@@ -24,15 +24,15 @@ VALUES
     ('USER', 'USER', 'USER');
 
 -- Populating book table with default values
-INSERT INTO book (title, isbn, category)
+INSERT INTO book (title, isbn, category, borrowed)
 VALUES
-    ('To Kill a Mockingbird', '978-0-06-112008-4', 'Fiction'),
-    ('1984', '978-0-452-28423-4', 'Dystopian'),
-    ('The Great Gatsby', '978-0-7432-7356-5', 'Classic'),
-    ('The Catcher in the Rye', '978-0-316-76948-0', 'Classic'),
-    ('Moby-Dick', '978-0-14-243724-7', 'Adventure'),
-    ('Pride and Prejudice', '978-0-19-953556-9', 'Romance'),
-    ('The Hobbit', '978-0-618-00221-3', 'Fantasy'),
-    ('War and Peace', '978-0-19-923276-5', 'Historical'),
-    ('The Odyssey', '978-0-14-026886-7', 'Epic'),
-    ('Crime and Punishment', '978-0-14-044913-6', 'Psychological');
+    ('To Kill a Mockingbird', '978-0-06-112008-4', 'Fiction', false),
+    ('1984', '978-0-452-28423-4', 'Dystopian', false),
+    ('The Great Gatsby', '978-0-7432-7356-5', 'Classic', false),
+    ('The Catcher in the Rye', '978-0-316-76948-0', 'Classic', false),
+    ('Moby-Dick', '978-0-14-243724-7', 'Adventure', false),
+    ('Pride and Prejudice', '978-0-19-953556-9', 'Romance', false),
+    ('The Hobbit', '978-0-618-00221-3', 'Fantasy', false),
+    ('War and Peace', '978-0-19-923276-5', 'Historical', false),
+    ('The Odyssey', '978-0-14-026886-7', 'Epic', false),
+    ('Crime and Punishment', '978-0-14-044913-6', 'Psychological', false);

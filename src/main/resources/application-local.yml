@@ -33,7 +33,7 @@ logging:
   level:
     org:
       springframework:
-        security: DEBUG
+        security: TRACE
     #    org.springframework.transaction: TRACE
     root: INFO
     com:

@@ -56,19 +56,19 @@ public class BookController {
         return ResponseEntity.ok(bookManager.returnBook(id));
     }
 
-    @PostMapping("/create")
+    @PostMapping
     public ResponseEntity<BookDTO> createBook(@RequestBody BookDTO bookDTO) {
         return ResponseEntity.ok(bookManager.create(bookDTO));
     }
 
-    @PutMapping("/update/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<String> updateBook(@PathVariable Integer id, @RequestBody BookDTO bookDTO) {
         return bookManager.update(id, bookDTO)
                 .map(bookDTOUpdated -> ResponseEntity.ok(BOOK_UPDATED_SUCCESSFULLY))
                 .orElseGet(() -> ResponseEntity.status(403).body(BOOK_UPDATE_UNSUCCESSFUL_MESSAGE));
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteBook(@PathVariable Integer id) {
         boolean isDeleted = bookManager.delete(id);
 
