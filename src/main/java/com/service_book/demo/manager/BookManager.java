@@ -1,11 +1,15 @@
 package com.service_book.demo.manager;
 
+import static java.lang.String.format;
+
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.service_book.demo.entity.Book;
+import com.service_book.demo.exception.DataNotFoundException;
 import com.service_book.demo.mapper.BookMapper;
 import com.service_book.demo.model.BookDTO;
 import com.service_book.demo.service.BookService;
@@ -40,43 +44,29 @@ public class BookManager {
         return books;
     }
 
-    public Optional<BookDTO> getById(Integer bookId) {
+    public BookDTO getById(Integer bookId) {
         log.info("Fetching book with ID: {}", bookId);
 
-        Optional<BookDTO> book = bookService.findById(bookId)
-                .map(bookMapper::toDTO);
-
-        if (book.isPresent()) {
-            log.info("Fetched book with ID: {}", bookId);
-        } else {
-            log.warn("Book with ID: {} not found", bookId);
-        }
-
-        return book;
+        return bookService.findById(bookId)
+                .map(bookMapper::toDTO)
+                .orElseThrow(() -> new DataNotFoundException("Book not found with id: " + bookId));
     }
 
     public String borrowBook(Integer bookId) {
         log.info("Borrowing book with ID: {}", bookId);
 
-        String result = bookService.findById(bookId)
+        return bookService.findById(bookId)
                 .map(this::processBorrowBook)
-                .orElse(String.format("Cannot find book by id: [%s]", bookId));
-
-        log.info("Result of borrowing book with ID {}: {}", bookId, result);
-        return result;
+                .orElseThrow(() -> new DataNotFoundException("Cannot find book by id: " + bookId));
     }
 
     public String returnBook(Integer bookId) {
         log.info("Returning book with ID: {}", bookId);
 
-        String result = bookService.findById(bookId)
+        return bookService.findById(bookId)
                 .map(this::processReturnBook)
-                .orElse(String.format("Cannot find book by id: [%s]", bookId));
-
-        log.info("Result of returning book with ID {}: {}", bookId, result);
-        return result;
+                .orElseThrow(() -> new DataNotFoundException("Cannot find book by id: " + bookId));
     }
-
 
     public BookDTO create(BookDTO bookDTO) {
         log.info("Creating new book with details: {}", bookDTO);
@@ -88,44 +78,37 @@ public class BookManager {
         return result;
     }
 
-    public Optional<BookDTO> update(Integer bookId, BookDTO bookDTO) {
+    @Transactional
+    public BookDTO update(Integer bookId, BookDTO bookDTO) {
         log.info("Updating book with ID: {} with new details: {}", bookId, bookDTO);
-
-        Optional<BookDTO> result = bookService.findById(bookId)
+        return bookService.findById(bookId)
                 .filter(Book::isNotBorrowed)
                 .map(book -> {
                     bookMapper.updateBook(bookDTO, book);
                     Book updatedBook = bookService.persistBook(book);
+                    log.info("Updated book with ID: {}", bookId);
                     return bookMapper.toDTO(updatedBook);
-                });
-
-        if (result.isPresent()) {
-            log.info("Updated book with ID: {}", bookId);
-        } else {
-            log.warn("Failed to update book with ID: {} - either book not found or it is borrowed", bookId);
-        }
-
-        return result;
+                })
+                .orElseThrow(() -> new DataNotFoundException(format("Failed to update book with ID: %s - "
+                        + "either book not found or it is borrowed", bookId)));
     }
 
-    public boolean delete(Integer bookId) {
+    public void delete(Integer bookId) {
         log.info("Deleting book with ID: {}", bookId);
-
         boolean result = bookService.findById(bookId)
                 .filter(Book::isNotBorrowed)
                 .map(book -> {
                     bookService.deleteBook(bookId);
+                    log.info("Deleted book with ID: {}", bookId);
                     return Boolean.TRUE;
                 })
                 .orElse(Boolean.FALSE);
 
-        if (result) {
-            log.info("Deleted book with ID: {}", bookId);
-        } else {
+        if (!result) {
             log.warn("Failed to delete book with ID: {} - either book not found or it is borrowed", bookId);
+            throw new DataNotFoundException(format("Failed to delete book with ID: %s - "
+                    + "either book not found or it is borrowed", bookId));
         }
-
-        return result;
     }
 
     private String processBorrowBook(Book book) {

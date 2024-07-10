@@ -1,14 +1,18 @@
 package com.service_book.demo.model;
 
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class BookDTO {
 
-    private Integer id = null;
+    Integer id = null;
 
-    private String title = null;
+    String title = null;
 
-    private String isbn = null;
+    String isbn = null;
 
-    private String category = null;
+    String category = null;
 
     public void setId(Integer id) {
         this.id = id;

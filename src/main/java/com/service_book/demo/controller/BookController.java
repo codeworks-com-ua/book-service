@@ -41,9 +41,7 @@ public class BookController {
 
     @GetMapping("/{id}")
     public ResponseEntity<BookDTO> getBookById(@PathVariable Integer id) {
-        return bookManager.getById(id)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        return ResponseEntity.ok(bookManager.getById(id));
     }
 
     @PostMapping("/{id}/borrow")
@@ -63,17 +61,13 @@ public class BookController {
 
     @PutMapping("/{id}")
     public ResponseEntity<String> updateBook(@PathVariable Integer id, @RequestBody BookDTO bookDTO) {
-        return bookManager.update(id, bookDTO)
-                .map(bookDTOUpdated -> ResponseEntity.ok(BOOK_UPDATED_SUCCESSFULLY))
-                .orElseGet(() -> ResponseEntity.status(403).body(BOOK_UPDATE_UNSUCCESSFUL_MESSAGE));
+        bookManager.update(id, bookDTO);
+        return ResponseEntity.ok(BOOK_UPDATED_SUCCESSFULLY);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteBook(@PathVariable Integer id) {
-        boolean isDeleted = bookManager.delete(id);
-
-        return isDeleted
-                ? ResponseEntity.ok(BOOK_DELETED_SUCCESSFULLY)
-                : ResponseEntity.status(403).body(BOOK_DELETE_UNSUCCESSFUL_MESSAGE);
+        bookManager.delete(id);
+        return ResponseEntity.ok(BOOK_DELETED_SUCCESSFULLY);
     }
 }

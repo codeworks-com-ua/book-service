@@ -8,34 +8,33 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 
 @Entity
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Table(name = "book")
 public class Book {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    Integer id;
 
     @Column(length = 50)
-    private String title = null;
+    String title = null;
 
     @Column(length = 50)
-    private String isbn = null;
+    String isbn = null;
 
     @Column(length = 50)
-    private String category = null;
+    String category = null;
 
-    private boolean borrowed = false;
+    boolean borrowed = false;
 
     public boolean isNotBorrowed() {
         return !this.borrowed;

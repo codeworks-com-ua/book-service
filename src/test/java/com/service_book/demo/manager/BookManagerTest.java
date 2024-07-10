@@ -1,26 +1,23 @@
 package com.service_book.demo.manager;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.service_book.demo.entity.Book;
+import com.service_book.demo.exception.DataNotFoundException;
 import com.service_book.demo.model.BookDTO;
 import com.service_book.demo.service.BookService;
 
@@ -63,29 +60,44 @@ class BookManagerTest {
     void getById_happyPass_shouldReturnBook() {
         when(bookService.findById(BOOK_ID)).thenReturn(Optional.of(generateBook()));
 
-        Optional<BookDTO> actualResult = bookManager.getById(BOOK_ID);
+        BookDTO actualResult = bookManager.getById(BOOK_ID);
 
-        assertThat(actualResult).isPresent();
+        assertThat(actualResult.getId()).isEqualTo(BOOK_ID);
+        assertThat(actualResult.getIsbn()).isEqualTo(ISBN);
+        assertThat(actualResult.getCategory()).isEqualTo(CATEGORY);
+        assertThat(actualResult.getTitle()).isEqualTo(TITLE);
     }
 
     @Test
-    @DisplayName("Should return optional empty when book does not exist.")
-    void getById_bookDoesNotExists_shouldReturnEmpty() {
+    @DisplayName("Should throw exception when book does not exist.")
+    void getById_bookDoesNotExists_shouldThrowDataNotFoundException() {
         when(bookService.findById(BOOK_ID)).thenReturn(Optional.empty());
 
-        Optional<BookDTO> actualResult = bookManager.getById(BOOK_ID);
-
-        assertThat(actualResult).isNotPresent();
+        assertThatThrownBy(() -> bookManager.getById(BOOK_ID))
+                .hasMessageContaining("Book not found with id: 1")
+                .isInstanceOf(DataNotFoundException.class);
     }
 
-    @ParameterizedTest(name = "{index} - {2}")
-    @MethodSource("borrowBookParametersProvider")
-    void borrowBook(Optional<Book> book, String expectedResult, String displayName) {
-        when(bookService.findById(BOOK_ID)).thenReturn(book);
+    @Test
+    @DisplayName("Should throw exception when book does not exist.")
+    void borrowBook_bookDoesNotExists_shouldThrowDataNotFoundException() {
+        when(bookService.findById(BOOK_ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> bookManager.borrowBook(BOOK_ID))
+                .hasMessageContaining("Cannot find book by id: 1")
+                .isInstanceOf(DataNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("Should return message that book already borrowed.")
+    void borrowBook_bookAlreadyBorrowed_shouldReturnCorrectMessage() {
+        Book borrowedBook = generateBook();
+        borrowedBook.setBorrowed(Boolean.TRUE);
+        when(bookService.findById(BOOK_ID)).thenReturn(Optional.of(borrowedBook));
 
         String actualResult = bookManager.borrowBook(BOOK_ID);
 
-        assertThat(actualResult).isEqualTo(expectedResult);
+        assertThat(actualResult).isEqualTo("Book already borrowed");
     }
 
     @Test
@@ -100,14 +112,24 @@ class BookManagerTest {
         verify(bookService).markBorrowedAndPersist(book);
     }
 
-    @ParameterizedTest(name = "{index} - {2}")
-    @MethodSource("returnBookParametersProvider")
-    void returnBook(Optional<Book> book, String expectedResult, String displayName) {
-        when(bookService.findById(BOOK_ID)).thenReturn(book);
+    @Test
+    @DisplayName("Should throw exception when book does not exist.")
+    void returnBook_bookDoesNotExists_shouldThrowDataNotFoundException() {
+        when(bookService.findById(BOOK_ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> bookManager.returnBook(BOOK_ID))
+                .hasMessageContaining("Cannot find book by id: 1")
+                .isInstanceOf(DataNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("Should return message that book already borrowed.")
+    void returnBook_bookIsNotBorrowed_shouldReturnCorrectMessage() {
+        when(bookService.findById(BOOK_ID)).thenReturn(Optional.of(generateBook()));
 
         String actualResult = bookManager.returnBook(BOOK_ID);
 
-        assertThat(actualResult).isEqualTo(expectedResult);
+        assertThat(actualResult).isEqualTo("Book is not borrowed");
     }
 
     @Test
@@ -140,51 +162,48 @@ class BookManagerTest {
 
     @Test
     @DisplayName("Should not update book when can not find it by id.")
-    void update_bookNotFound_shouldNotInteract() {
+    void update_bookNotFound_shouldThrowDataNotFoundException() {
         BookDTO bookDTO = generateBookDTO();
         when(bookService.findById(BOOK_ID)).thenReturn(Optional.empty());
 
-        Optional<BookDTO> actualResult = bookManager.update(BOOK_ID, bookDTO);
-
-        assertThat(actualResult).isNotPresent();
-        verifyNoMoreInteractions(bookService);
+        assertThatThrownBy(() -> bookManager.update(BOOK_ID, bookDTO))
+                .hasMessageContaining("Failed to update book with ID: 1 - either book not found or it is borrowed")
+                .isInstanceOf(DataNotFoundException.class);
     }
 
     @Test
     @DisplayName("Should update book.")
     void update_happyPass_shouldUpdate() {
         BookDTO bookDTO = generateBookDTO();
+        bookDTO.setCategory("custom_category");
         Book book = generateBook();
         when(bookService.findById(BOOK_ID)).thenReturn(Optional.of(book));
         when(bookService.persistBook(book)).thenReturn(book);
 
-        Optional<BookDTO> actualResult = bookManager.update(BOOK_ID, bookDTO);
-
-        assertThat(actualResult).isPresent();
+        bookManager.update(BOOK_ID, bookDTO);
     }
 
     @Test
     @DisplayName("Should not update book when book is borrowed.")
-    void update_bookIsBorrowed_shouldNotUpdate() {
+    void update_bookIsBorrowed_shouldThrowDataNotFoundException() {
         BookDTO bookDTO = generateBookDTO();
         Book book = generateBook();
         book.setBorrowed(Boolean.TRUE);
         when(bookService.findById(BOOK_ID)).thenReturn(Optional.of(book));
 
-        bookManager.update(BOOK_ID, bookDTO);
-
-        verifyNoMoreInteractions(bookService);
+        assertThatThrownBy(() -> bookManager.update(BOOK_ID, bookDTO))
+                .hasMessageContaining("Failed to update book with ID: 1 - either book not found or it is borrowed")
+                .isInstanceOf(DataNotFoundException.class);
     }
 
     @Test
     @DisplayName("Should not delete book when can not find it by id.")
-    void delete_bookNotFound_shouldNotInteract() {
+    void delete_bookNotFound_shouldThrowDataNotFoundException() {
         when(bookService.findById(BOOK_ID)).thenReturn(Optional.empty());
 
-        boolean actualResult = bookManager.delete(BOOK_ID);
-
-        assertThat(actualResult).isFalse();
-        verifyNoMoreInteractions(bookService);
+        assertThatThrownBy(() -> bookManager.delete(BOOK_ID))
+                .hasMessageContaining("Failed to delete book with ID: 1 - either book not found or it is borrowed")
+                .isInstanceOf(DataNotFoundException.class);
     }
 
     @Test
@@ -193,47 +212,21 @@ class BookManagerTest {
         Book book = generateBook();
         when(bookService.findById(BOOK_ID)).thenReturn(Optional.of(book));
 
-        boolean actualResult = bookManager.delete(BOOK_ID);
+        bookManager.delete(BOOK_ID);
 
-        assertThat(actualResult).isTrue();
         verify(bookService).deleteBook(BOOK_ID);
     }
 
     @Test
     @DisplayName("Should not delete book when book is borrowed.")
-    void delete_bookIsBorrowed_shouldNotDelete() {
+    void delete_bookIsBorrowed_shouldNThrowDataNotFoundException() {
         Book book = generateBook();
         book.setBorrowed(Boolean.TRUE);
         when(bookService.findById(BOOK_ID)).thenReturn(Optional.of(book));
 
-        boolean actualResult = bookManager.delete(BOOK_ID);
-
-        assertThat(actualResult).isFalse();
-        verifyNoMoreInteractions(bookService);
-    }
-
-    private static Stream<Arguments> borrowBookParametersProvider() {
-        Book borrowedBook = generateBook();
-        borrowedBook.setBorrowed(Boolean.TRUE);
-
-        return Stream.of(
-                Arguments.of(Optional.empty(), "Cannot find book by id: [1]",
-                        "Should return message that can not find book."),
-                Arguments.of(Optional.of(borrowedBook), "Book already borrowed",
-                        "Should return message that book already borrowed.")
-        );
-    }
-
-    private static Stream<Arguments> returnBookParametersProvider() {
-        Book borrowedBook = generateBook();
-        borrowedBook.setBorrowed(Boolean.FALSE);
-
-        return Stream.of(
-                Arguments.of(Optional.empty(), "Cannot find book by id: [1]",
-                        "Should return message that can not find book."),
-                Arguments.of(Optional.of(borrowedBook), "Book is not borrowed",
-                        "Should return message that book is not borrowed.")
-        );
+        assertThatThrownBy(() -> bookManager.delete(BOOK_ID))
+                .hasMessageContaining("Failed to delete book with ID: 1 - either book not found or it is borrowed")
+                .isInstanceOf(DataNotFoundException.class);
     }
 
     private static Book generateBook() {

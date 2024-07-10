@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -126,7 +127,7 @@ class DemoApplicationTests extends IntegrationTestConfig {
 
 	@Test
 	@DisplayName("Scenario when ADMIN logs in, tries to delete a book but it's borrowed")
-	void adminTriesToDeleteBorrowedBook_thenForbidden() throws Exception {
+	void adminTriesToDeleteBorrowedBook_thenNotFound() throws Exception {
 		MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
 						.param(USERNAME, ADMIN)
 						.param(PASSWORD, ADMIN))
@@ -142,13 +143,13 @@ class DemoApplicationTests extends IntegrationTestConfig {
 
 		mockMvc.perform(delete("/api/books/1")
 						.header(AUTHORIZATION, BEARER + token))
-				.andExpect(status().isForbidden())
-				.andExpect(content().string("Forbidden: You are not allowed to delete the book or the book is borrowed."));
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.details").value("Failed to delete book with ID: 1 - either book not found or it is borrowed"));
 	}
 
 	@Test
 	@DisplayName("Scenario when ADMIN logs in, tries to update a book but it's borrowed")
-	void adminTriesToUpdateBorrowedBook_thenForbidden() throws Exception {
+	void adminTriesToUpdateBorrowedBook_thenNotFound() throws Exception {
 		MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
 						.param(USERNAME, ADMIN)
 						.param(PASSWORD, ADMIN))
@@ -166,7 +167,24 @@ class DemoApplicationTests extends IntegrationTestConfig {
 						.header(AUTHORIZATION, BEARER + token)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content("{\"title\": \"Updated Title\", \"isbn\": \"123-456-789\", \"category\": \"Updated Category\"}"))
-				.andExpect(status().isForbidden())
-				.andExpect(content().string("Forbidden: You are not allowed to update the book or the book is borrowed."));
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.details").value("Failed to update book with ID: 1 - either book not found or it is borrowed"));
+	}
+
+	@Test
+	@DisplayName("Scenario when USER logs in, tries to borrow a book but it does not exists")
+	void adminTriesToBorrowBook_thenNotFound() throws Exception {
+		MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+						.param(USERNAME, USER)
+						.param(PASSWORD, USER))
+				.andExpect(status().isOk())
+				.andReturn();
+
+		String token = loginResult.getResponse().getContentAsString();
+
+		mockMvc.perform(post("/api/books/100/borrow")
+						.header(AUTHORIZATION, BEARER + token))
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.details").value("Cannot find book by id: 100"));
 	}
 }

@@ -39,14 +39,15 @@ public class BookService {
         bookRepository.deleteById(id);
     }
 
+    @Transactional
     public void markBorrowedAndPersist(Book book) {
         book.setBorrowed(Boolean.TRUE);
         bookRepository.save(book);
     }
 
+    @Transactional
     public void markReturnedAndPersist(Book book) {
         book.setBorrowed(Boolean.FALSE);
         bookRepository.save(book);
     }
-
 }
