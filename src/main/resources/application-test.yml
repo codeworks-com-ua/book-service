@@ -1,5 +1,3 @@
-#server:
-#  port: 8080
 spring:
   mvc:
     async:
@@ -9,18 +7,6 @@ spring:
     username: ${POSTGRES_USERNAME:postgres}
     password: ${POSTGRES_PASSWORD:postgres}
     url: jdbc:postgresql://${HOST:localhost}:${POSTGRES_PORT:5433}/postgres?TimeZone=UTC
-#  jpa:
-#    #    show-sql: true
-#    hibernate:
-#      ddl-auto: update
-#    properties:
-#      hibernate:
-#        #        transaction:
-#        #          isolation: 2
-#        #        flushMode: SERIALIZABLE
-#        jdbc:
-#          time_zone: UTC
-#          format_sql: true
   flyway:
     enabled: true
     locations: classpath:migration
