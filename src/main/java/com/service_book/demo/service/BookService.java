@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.service_book.demo.dao.BookRepository;
 import com.service_book.demo.entity.Book;
+import com.service_book.demo.entity.User;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -49,5 +50,9 @@ public class BookService {
     public void markReturnedAndPersist(Book book) {
         book.setBorrowed(Boolean.FALSE);
         bookRepository.save(book);
+    }
+
+    public List<Book> findAllByUser(User user) {
+        return bookRepository.findAllByUserId(user.getId());
     }
 }

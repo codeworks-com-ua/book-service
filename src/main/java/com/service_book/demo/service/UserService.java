@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import com.service_book.demo.dao.UserRepository;
 import com.service_book.demo.entity.User;
 import com.service_book.demo.exception.AuthenticationException;
+import com.service_book.demo.exception.DataNotFoundException;
 import com.service_book.demo.util.JwtUtil;
 
 import lombok.AccessLevel;
@@ -67,6 +68,11 @@ public class UserService implements UserDetailsService {
 
         log.warn("Authentication failed for username: {} - invalid credentials", username);
         throw new AuthenticationException("Invalid credentials");
+    }
+
+    public User getUserById(Integer userId) {
+        return userRepository.findById(userId).orElseThrow(
+                () -> new DataNotFoundException(format("User not found with id: %s", userId)));
     }
 
     private String generateToken(UserDetails userDetails, String username) {
