@@ -70,4 +70,9 @@ public class BookController {
         bookManager.delete(id);
         return ResponseEntity.ok(BOOK_DELETED_SUCCESSFULLY);
     }
+
+    @GetMapping("/users/{id}")
+    public List<BookDTO> getAllBooksByUser(@PathVariable Integer id) {
+        return bookManager.getAllBooksByUser(id);
+    }
 }

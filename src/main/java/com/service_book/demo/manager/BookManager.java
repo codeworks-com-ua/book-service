@@ -3,16 +3,18 @@ package com.service_book.demo.manager;
 import static java.lang.String.format;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.service_book.demo.entity.Book;
+import com.service_book.demo.entity.User;
 import com.service_book.demo.exception.DataNotFoundException;
 import com.service_book.demo.mapper.BookMapper;
 import com.service_book.demo.model.BookDTO;
 import com.service_book.demo.service.BookService;
+import com.service_book.demo.service.UserService;
+import com.service_book.demo.util.BookValidator;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,7 @@ public class BookManager {
 
     BookMapper bookMapper = BookMapper.getInstance();
     BookService bookService;
+    UserService userService;
 
     public List<BookDTO> getAll() {
         log.info("Fetching all books");
@@ -109,6 +112,18 @@ public class BookManager {
             throw new DataNotFoundException(format("Failed to delete book with ID: %s - "
                     + "either book not found or it is borrowed", bookId));
         }
+    }
+
+    public List<BookDTO> getAllBooksByUser(Integer userId) {
+        User user = userService.getUserById(userId);
+
+        List<BookDTO> books = bookService.findAllByUser(user).stream()
+                .map(bookMapper::toDTO)
+                .toList();
+
+        BookValidator.validateBooks(userId, books);
+
+        return books;
     }
 
     private String processBorrowBook(Book book) {
